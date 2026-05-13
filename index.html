@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>伴读：The Unreasonable Effectiveness of HTML</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --border: #e2e2e2;
+    --text: #1a1a1a;
+    --text-secondary: #555;
+    --accent: #2563eb;
+    --accent-light: #eff6ff;
+    --bone: #dc2626;
+    --bone-bg: #fef2f2;
+    --muscle: #d97706;
+    --muscle-bg: #fffbeb;
+    --fascia: #6b7280;
+    --fascia-bg: #f9fafb;
+    --reader: #059669;
+    --reader-bg: #ecfdf5;
+    --agent: #7c3aed;
+    --agent-bg: #f5f3ff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, "SF Pro Text", "Helvetica Neue", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 16px;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    color: white;
+    padding: 48px 24px 36px;
+    text-align: center;
+  }
+  .header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+  .header .subtitle {
+    font-size: 15px;
+    opacity: 0.7;
+    margin-bottom: 20px;
+  }
+  .header .meta {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    font-size: 13px;
+    opacity: 0.6;
+  }
+  .header a { color: #93c5fd; text-decoration: none; }
+  .header a:hover { text-decoration: underline; }
+
+  /* Tabs */
+  .tab-bar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    padding: 0 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .tab-btn {
+    padding: 14px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { color: var(--text); background: var(--accent-light); }
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* Content */
+  .container { max-width: 780px; margin: 0 auto; padding: 32px 24px 80px; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 40px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--border);
+    letter-spacing: -0.3px;
+  }
+  h3 {
+    font-size: 17px;
+    font-weight: 600;
+    margin: 28px 0 12px;
+    color: var(--text);
+  }
+  p { margin: 10px 0; }
+
+  /* Tags */
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    vertical-align: middle;
+    margin-right: 4px;
+  }
+  .tag-bone { background: var(--bone-bg); color: var(--bone); }
+  .tag-muscle { background: var(--muscle-bg); color: var(--muscle); }
+  .tag-fascia { background: var(--fascia-bg); color: var(--fascia); }
+
+  /* Blockquote - original text */
+  blockquote {
+    border-left: 3px solid var(--border);
+    padding: 8px 16px;
+    margin: 12px 0;
+    color: var(--text-secondary);
+    font-size: 15px;
+    background: #f8f8f8;
+    border-radius: 0 6px 6px 0;
+  }
+
+  /* Dialogue boxes */
+  .dialogue {
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    font-size: 15px;
+  }
+  .dialogue .speaker {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  .dialogue-reader {
+    background: var(--reader-bg);
+    border-left: 3px solid var(--reader);
+  }
+  .dialogue-reader .speaker { color: var(--reader); }
+  .dialogue-agent {
+    background: var(--agent-bg);
+    border-left: 3px solid var(--agent);
+  }
+  .dialogue-agent .speaker { color: var(--agent); }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  th {
+    font-weight: 600;
+    background: #f5f5f5;
+    font-size: 13px;
+  }
+
+  /* Code / structure */
+  pre {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 20px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 16px 0;
+    font-family: "SF Mono", "Fira Code", monospace;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 16px 0;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .card h4 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  /* Evolution timeline */
+  .timeline { position: relative; padding-left: 28px; margin: 20px 0; }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 4px;
+    bottom: 4px;
+    width: 2px;
+    background: var(--border);
+  }
+  .timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -24px;
+    top: 18px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid white;
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+  .timeline-item .stage {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Insight box */
+  .insight {
+    background: linear-gradient(135deg, #fefce8, #fef9c3);
+    border: 1px solid #fde047;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 16px 0;
+  }
+  .insight::before {
+    content: '洞察';
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #a16207;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+
+  /* Collapsible */
+  details {
+    margin: 12px 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  summary {
+    padding: 12px 16px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    background: #fafafa;
+    user-select: none;
+  }
+  summary:hover { background: #f0f0f0; }
+  details[open] summary { border-bottom: 1px solid var(--border); }
+  details .inner { padding: 16px; }
+
+  /* Link button */
+  .link-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background: var(--accent);
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    margin: 8px 8px 8px 0;
+    transition: background 0.2s;
+  }
+  .link-btn:hover { background: #1d4ed8; }
+  .link-btn.secondary {
+    background: white;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .link-btn.secondary:hover { background: #f5f5f5; }
+
+  /* Section intro */
+  .section-intro {
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  ol, ul { margin: 8px 0 8px 20px; }
+  li { margin: 4px 0; }
+  strong { font-weight: 600; }
+  em { font-style: italic; }
+
+  .separator { height: 1px; background: var(--border); margin: 32px 0; }
+
+  @media (max-width: 640px) {
+    .header h1 { font-size: 22px; }
+    .tab-btn { padding: 12px 12px; font-size: 13px; }
+    .header .meta { flex-direction: column; gap: 4px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>The Unreasonable Effectiveness of HTML</h1>
+  <div class="subtitle">一场伴读：作者的论证 × 读者的判断</div>
+  <div class="meta">
+    <span>作者 Thariq · Anthropic Claude Code</span>
+    <span>伴读日期 2026-05-13</span>
+    <a href="https://x.com/trq212/status/2052809885763747935" target="_blank">原文链接</a>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('overview')">全局地图</button>
+  <button class="tab-btn" onclick="switchTab('reader')">读者视角</button>
+  <button class="tab-btn" onclick="switchTab('translation')">逐段翻译</button>
+  <button class="tab-btn" onclick="switchTab('collision')">碰撞记录</button>
+  <button class="tab-btn" onclick="switchTab('review')">全文复盘</button>
+</div>
+
+<div class="container">
+
+<!-- ==================== TAB: 全局地图 ==================== -->
+<div id="tab-overview" class="tab-content active">
+  <p class="section-intro">快速了解这篇文章在说什么、怎么说的、哪些是骨架哪些是填充。适合第一次看或快速回忆。</p>
+
+  <h2>一句话摘要</h2>
+  <p>在 AI agent 时代，HTML 正在取代 Markdown 成为人机协作的最佳输出格式——因为它信息密度更高、更易阅读、可交互、可分享，让人真正"留在回路里"（in the loop）。</p>
+
+  <h2>结构地图</h2>
+<pre>
+[引子] Markdown 的局限
+     |
+     v
+[核心论点] 为什么选 HTML？
+     |
+     +-- 信息密度          <span style="color:#f87171">[骨]</span>
+     +-- 视觉清晰度        <span style="color:#f87171">[骨]</span>
+     +-- 易于分享          <span style="color:#fbbf24">[肌]</span>
+     +-- 双向交互          <span style="color:#f87171">[骨]</span>
+     +-- 数据摄入优势      <span style="color:#fbbf24">[肌]</span>
+     +-- 它让人愉悦        <span style="color:#9ca3af">[筋]</span>
+     |
+     v
+[操作指南] 如何开始
+     |
+     v
+[用例展开]
+     +-- 规格/规划/探索    <span style="color:#fbbf24">[肌]</span>
+     +-- 代码审查与理解    <span style="color:#fbbf24">[肌]</span>
+     +-- 设计与原型        <span style="color:#fbbf24">[肌]</span>
+     +-- 报告/研究/学习    <span style="color:#fbbf24">[肌]</span>
+     +-- 自定义编辑界面    <span style="color:#f87171">[骨]</span>
+     |
+     v
+[FAQ] 回应常见质疑        <span style="color:#fbbf24">[肌]</span>
+     |
+     v
+[收尾] Stay in the Loop   <span style="color:#f87171">[骨]</span>
+</pre>
+
+  <h2>段落分类</h2>
+  <table>
+    <tr><th>分类</th><th>含义</th><th>段落</th></tr>
+    <tr>
+      <td><span class="tag tag-bone">骨</span></td>
+      <td>承载核心论证</td>
+      <td>引子、信息密度、视觉清晰度、双向交互、自定义编辑界面、Stay in the Loop</td>
+    </tr>
+    <tr>
+      <td><span class="tag tag-muscle">肌</span></td>
+      <td>展开论证的证据和例子</td>
+      <td>易于分享、数据摄入、五个用例展开、FAQ</td>
+    </tr>
+    <tr>
+      <td><span class="tag tag-fascia">筋</span></td>
+      <td>过渡与连接</td>
+      <td>"如何开始"过渡段、"It's Joyful"感性收束</td>
+    </tr>
+  </table>
+
+  <h2>HTML vs Markdown：能力边界</h2>
+  <table>
+    <tr><th></th><th>Markdown</th><th>HTML</th></tr>
+    <tr><td><strong>信息是静态的</strong></td><td>够用</td><td>多余</td></tr>
+    <tr><td><strong>信息需要被不同人看</strong></td><td>勉强</td><td>合适</td></tr>
+    <tr><td><strong>信息需要被操作</strong></td><td>做不到</td><td>唯一选项</td></tr>
+  </table>
+
+  <div class="separator"></div>
+  <h2>作者的示例集</h2>
+  <p>Thariq 用 Claude Code 生成的各类 HTML 产物——spec、code review、设计原型、报告、自定义编辑器。</p>
+  <a class="link-btn" href="https://thariqs.github.io/html-effectiveness/" target="_blank">查看示例集 →</a>
+  <a class="link-btn secondary" href="https://x.com/trq212/status/2052809885763747935" target="_blank">阅读原文</a>
+</div>
+
+<!-- ==================== TAB: 读者视角 ==================== -->
+<div id="tab-reader" class="tab-content">
+  <p class="section-intro">读者在阅读过程中建立的独立判断框架——不是复述作者，而是与作者对话后长出来的自己的东西。</p>
+
+  <h2>判断演化</h2>
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="stage">初始判断</div>
+      <p><strong>分层而非替代。</strong>Markdown 是底层，HTML 是上层。作者的"替代"框架不对——两者各有位置。</p>
+    </div>
+    <div class="timeline-item">
+      <div class="stage">中段深化</div>
+      <p><strong>Markdown 做思考，HTML 做呈现。</strong>一个编译隐喻——Markdown 是源码，HTML 是编译产物。思考阶段要省 token、快速迭代；呈现阶段才需要丰富和直观。</p>
+    </div>
+    <div class="timeline-item">
+      <div class="stage">新增维度</div>
+      <p><strong>协作。</strong>不只是"给别人看"，而是"跟别人一起调"。面向他人 + 需要共同操作时，HTML 是唯一选项。操作界面把抽象降维成直觉。</p>
+    </div>
+    <div class="timeline-item">
+      <div class="stage">终局洞察</div>
+      <p><strong>格式不是工具选择，是控制力的前提。</strong>人的意愿不是自变量，阅读体验才是。你不会因为"应该负责"就逼自己读完 500 行 Markdown，但你可能会因为 HTML 好看就"不小心"读完了。</p>
+    </div>
+  </div>
+
+  <h2>读者的核心框架</h2>
+  <table>
+    <tr><th></th><th>思考阶段</th><th>呈现阶段</th><th>协作阶段</th></tr>
+    <tr><td><strong>目标</strong></td><td>对齐思路、快速迭代</td><td>让别人看懂</td><td>让别人能操作</td></tr>
+    <tr><td><strong>格式</strong></td><td>Markdown</td><td>HTML</td><td>交互式 HTML</td></tr>
+    <tr><td><strong>受众</strong></td><td>自己 / Agent</td><td>需要视觉辅助的人</td><td>需要共同决策的人</td></tr>
+    <tr><td><strong>Token 策略</strong></td><td>省（每轮要准）</td><td>可以多花（可以刷）</td><td>值得投入</td></tr>
+  </table>
+
+  <h2>读者发现的关键概念</h2>
+
+  <div class="card">
+    <h4>动态与静态 · 快照回传</h4>
+    <p>HTML 能做<strong>状态捕获</strong>：从一个连续的参数空间里钉住一个点（快照），把它固化下来再送回流程。Markdown 是无状态的，做不到。</p>
+  </div>
+
+  <div class="card">
+    <h4>受众的抽象能力</h4>
+    <p>作者没有显式提出的维度：能读骨架的人用 Markdown 更高效（噪音少）；需要看到"长什么样"才有概念的人需要 HTML 做翻译层。</p>
+  </div>
+
+  <div class="card">
+    <h4>因果倒置</h4>
+    <p>作者说"我选择用 HTML 来留在回路里"（主动选择）。读者的重新解释：不是人选择留在回路里，而是<strong>格式决定了人能不能留在回路里</strong>（被动条件）。</p>
+  </div>
+
+  <h2>终局问题</h2>
+  <div class="insight">
+    如果人的控制力取决于格式匹配认知习惯，而 agent 的效率取决于格式轻量可追踪（Markdown），那"对人最好的格式"和"对人机系统最好的格式"可能不是同一个。这个分裂怎么解决？还是说它根本不需要被解决——两层各管各的就行？
+  </div>
+</div>
+
+<!-- ==================== TAB: 逐段翻译 ==================== -->
+<div id="tab-translation" class="tab-content">
+  <p class="section-intro">英文原文的三层翻译（信·达·雅），适合想细读原文或学习英文技术写作的读者。</p>
+
+  <h2><span class="tag tag-bone">骨</span> 引子：Markdown 的局限</h2>
+
+  <details open>
+    <summary>直译层（信）</summary>
+    <div class="inner">
+      <blockquote>Markdown has become the dominant file format used by agents to communicate with us. It's simple, portable, has some rich text capability and is easy for you to edit. Claude has even gotten surprisingly good at using ASCII to make diagrams inside of markdown files.</blockquote>
+      <p>Markdown 已成为 agent（智能体）用来与我们沟通的主流文件格式。它简单、可移植、有一定的富文本能力，也便于你编辑。Claude 甚至出乎意料地擅长在 Markdown 文件中用 ASCII 画图表。</p>
+
+      <blockquote>But as agents have become more and more powerful, I have felt that markdown has become a restricting format. I find it difficult to read a markdown file of more than a hundred lines.</blockquote>
+      <p>但随着 agent 越来越强大，我感到 Markdown 正在变成一种限制性格式。超过一百行的 Markdown 文件我就很难读进去了。</p>
+
+      <blockquote>I'm also increasingly not editing these files myself, but using them as specs, reference files, brainstorming outputs, etc. When I do make edits, I'm usually prompting Claude to edit them, which removes one of markdown's largest benefits.</blockquote>
+      <p>我也越来越少亲自编辑这些文件了，而是把它们当作规格说明、参考文件、头脑风暴的产出。即使我要编辑，通常也是让 Claude 来改，这就去掉了 Markdown 最大的优势之一。</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>意译层（达）</summary>
+    <div class="inner">
+      <p>Markdown 曾经是人机协作的通用语言——轻便、好编辑、够用。但当 agent 能做的事越来越复杂、输出越来越长的时候，Markdown 的天花板暴露了：超过百行你根本不想读；你想要颜色、图表、交互，Markdown 给不了；你自己已经不怎么手动编辑文件了，都是让 Claude 改——那 Markdown"人类易编辑"这个核心卖点也站不住了。</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>点睛层（雅）</summary>
+    <div class="inner">
+      <p>关键转折：Markdown 的核心价值主张是 <strong>human-editable</strong>（人类可编辑），但当人类从"编辑者"变成了"审阅者"（reviewer），编辑权交给了 agent，这个价值主张就被釜底抽薪了。</p>
+      <p>作者用 "removes one of markdown's largest benefits" ——这是英文技术写作中典型的 <strong>understatement</strong>（轻描淡写）：语气越平，判断越重。</p>
+    </div>
+  </details>
+
+  <div class="separator"></div>
+
+  <h2><span class="tag tag-bone">骨</span> 信息密度</h2>
+
+  <details>
+    <summary>直译层（信）</summary>
+    <div class="inner">
+      <blockquote>HTML can convey much richer information compared to markdown. It can of course do simple document structure like headers and formatting, but it can also represent all sorts of other information.</blockquote>
+      <p>HTML 比 Markdown 能传达丰富得多的信息：表格数据、CSS 设计、SVG 插图、script 代码片段、JS+CSS 交互、SVG/HTML 工作流、绝对定位和 Canvas 空间数据、image 图片。</p>
+      <blockquote>I would go so far as to say that there is almost no set of information that Claude can read that you cannot fairly efficiently represent with HTML.</blockquote>
+      <p>几乎没有什么 Claude 能读取的信息是 HTML 不能相当高效地表示的。</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>意译层（达）</summary>
+    <div class="inner">
+      <p>HTML 是一种几乎无上限的表示格式。Markdown 只能做文本结构，但 HTML 能做表格、图表、交互、空间布局、嵌入式代码执行……上限差了一个量级。</p>
+    </div>
+  </details>
+
+  <div class="separator"></div>
+
+  <h2><span class="tag tag-bone">骨</span> 双向交互</h2>
+
+  <details>
+    <summary>直译层（信）</summary>
+    <div class="inner">
+      <blockquote>HTML can allow you to interact with the document, for example you might want to ask it to add sliders or knobs to adjust a design or allow you to tweak different options in the algorithm to see what happens. You can also ask it to let you copy these changes into a prompt to paste back into Claude Code.</blockquote>
+      <p>HTML 能让你与文档交互——加滑块或旋钮调整设计，拨弄算法的不同选项看效果。还可以让它提供一个按钮，把调好的参数复制成 prompt 粘回 Claude Code。</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>点睛层（雅）</summary>
+    <div class="inner">
+      <p>"copy these changes into a prompt to paste back into Claude Code" 描述的是一个<strong>闭环</strong>：Claude 生成 HTML → 人在 HTML 上调参 → 参数变成 prompt → 喂回 Claude。这已经不是"输出格式"的讨论了，这是把 HTML 当作人机协作的中间界面。</p>
+    </div>
+  </details>
+
+  <div class="separator"></div>
+
+  <h2><span class="tag tag-bone">骨</span> Stay in the Loop</h2>
+
+  <details>
+    <summary>直译层（信）</summary>
+    <div class="inner">
+      <blockquote>All of the above is to say that I think the real reason I use HTML is that I feel much more in the loop with Claude. I had begun to fear that because I had stopped reading plans in depth I would simply have to leave Claude to make its choices.</blockquote>
+      <p>归根结底，我用 HTML 的真正原因是它让我感觉自己还在回路里。我曾经开始害怕——因为我已经不再深入阅读计划了，可能只能放手让 Claude 自己做决定。</p>
+      <blockquote>But I am happy to say instead that I feel more in the loop than ever before when using HTML.</blockquote>
+      <p>但我很高兴地说，用 HTML 之后，我比以前任何时候都更在回路里。</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>意译层（达）</summary>
+    <div class="inner">
+      <p>全文的落点不是技术比较，而是一种<strong>存在性焦虑</strong>：当 agent 越来越强，人类正在滑出决策回路。Markdown 因为太难读，加速了这个滑出过程——你不读 plan，就等于放弃了判断权。HTML 把信息重新变得可消化，让人愿意去看，从而重新握住方向盘。</p>
+    </div>
+  </details>
+
+  <div class="separator"></div>
+
+  <h2><span class="tag tag-muscle">肌</span> 流读段落摘要</h2>
+
+  <div class="card">
+    <h4>Visual Clarity + Ease of Sharing</h4>
+    <p>超过 100 行的 Markdown 自己都不读，更别指望团队读。HTML 用标签页、插图、链接组织结构，上传即可分享。别人真正读你 spec 的概率在 HTML 下高得多。</p>
+  </div>
+
+  <div class="card">
+    <h4>五个用例</h4>
+    <ol>
+      <li><strong>Specs / Planning</strong> — 做出一组互相关联的 HTML 文件网络</li>
+      <li><strong>Code Review</strong> — 每个 PR 附一个 HTML 代码解释器</li>
+      <li><strong>Design & Prototypes</strong> — 可调原型 + 滑块调参 + 导出</li>
+      <li><strong>Reports & Learning</strong> — 长文档、交互式讲解器、幻灯片</li>
+      <li><strong>Custom Editing Interfaces</strong> — 为特定数据专门造的一次性工具，关键是以导出结束</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h4>FAQ 要点</h4>
+    <ul>
+      <li><strong>Token 效率</strong>：HTML 慢 2-4 倍，但作者认为值得</li>
+      <li><strong>版本控制</strong>：作者承认最大缺点——HTML diffs 嘈杂难审</li>
+      <li><strong>审美</strong>：先生成设计系统 HTML，后续引用保持风格统一</li>
+      <li><strong>极端立场</strong>："I'm probably far on the HTML maximalist side of things"</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ==================== TAB: 碰撞记录 ==================== -->
+<div id="tab-collision" class="tab-content">
+  <p class="section-intro">读者与文本之间的碰撞全记录。每个骨架段都停下来对话——问、答、分析。</p>
+
+  <h2>碰撞 1：引子段</h2>
+  <h3>作者的核心主张</h3>
+  <p>当人类不再是文件的编辑者，Markdown 的核心优势就消失了。</p>
+
+  <div class="dialogue dialogue-agent">
+    <div class="speaker">Agent 提问</div>
+    <p>你同意"当人类不再是文件的编辑者，Markdown 的核心优势就消失了"这个判断吗？</p>
+  </div>
+
+  <div class="dialogue dialogue-reader">
+    <div class="speaker">读者回应</div>
+    <p>底层逻辑上，应该还是 Markdown 是底层，HTML 是基于 Markdown 之上的那一层。太长的 Markdown 偏线性，不是二维的平面展示。但"Markdown 核心优势消失"这个说法让我不太 comfortable。</p>
+    <p>有多少文件是那种特别长的长文？Markdown 本身非常 simple、straightforward，层级也清楚。HTML 夹杂了其他元素，不那么简单清晰。</p>
+  </div>
+
+  <div class="dialogue dialogue-agent">
+    <div class="speaker">Agent 分析</div>
+    <p>两个独立质疑：</p>
+    <p><strong>质疑一</strong>：Markdown 和 HTML 是"替代"还是"分层"？作者框架是替代，读者感受到的是分层。</p>
+    <p><strong>质疑二</strong>：大多数文件真的那么长吗？如果多数输出是 20-50 行，Markdown 的 simplicity 就不是缺点，而是恰好够用。</p>
+    <p>读者的不适感有道理：作者把<strong>特定场景下的最优解</strong>包装成了<strong>通用主张</strong>。</p>
+  </div>
+
+  <div class="separator"></div>
+
+  <h2>碰撞 2：划线</h2>
+
+  <div class="dialogue dialogue-agent">
+    <div class="speaker">Agent 提问</div>
+    <p>什么情况下该留在 Markdown，什么情况下值得"升格"到 HTML？</p>
+  </div>
+
+  <div class="dialogue dialogue-reader">
+    <div class="speaker">读者回应</div>
+    <p>Markdown 用于简单清晰的场景，骨架信息对齐。HTML 进入 Demo 环节——给需要视觉呈现的受众。对那些不懂的人，或一定要看到"长成什么样"才有概念的人，HTML 更合适。</p>
+  </div>
+
+  <div class="insight">读者暗含了作者没有显式提出的维度：<strong>受众的抽象能力</strong>。能读骨架的人用 Markdown 更好（噪音少）；需要看到实际样子才能理解的人需要 HTML 做翻译层。</div>
+
+  <div class="separator"></div>
+
+  <h2>碰撞 3：信息密度</h2>
+
+  <div class="dialogue dialogue-agent">
+    <div class="speaker">Agent 提问</div>
+    <p>这张 HTML 能力清单里，有多少是你日常真正需要的？</p>
+  </div>
+
+  <div class="dialogue dialogue-reader">
+    <div class="speaker">读者回应</div>
+    <p>都是基于展示需求。很多工作可以通过分解完成，沟通思路时文字就足够了。如果 token 多且容错高，HTML 没问题；如果 token 少、要用固定 token 完成最多工作，思路碰撞用 Markdown，最后再用 HTML 呈现。</p>
+  </div>
+
+  <div class="insight"><strong>Markdown 做思考，HTML 做呈现。</strong>一个编译隐喻——Markdown 是源码，HTML 是编译产物。Token 成本是作者轻轻带过但读者敏锐捕获的变量。</div>
+
+  <div class="separator"></div>
+
+  <h2>碰撞 4：双向交互</h2>
+
+  <div class="dialogue dialogue-agent">
+    <div class="speaker">Agent 提问</div>
+    <p>这里 HTML 不只是呈现，而是思考工具。这会动摇你之前划的线吗？</p>
+  </div>
+
+  <div class="dialogue dialogue-reader">
+    <div class="speaker">读者回应</div>
+    <p>让我想到"动态与静态"。如果能在交互和调试过程中找到中途的 snapshot（快照），从动态过程中提取静态点再生成切片，回过头来重新运行后续 process，那 HTML 的确具有极大优势。</p>
+  </div>
+
+  <div class="insight">HTML 能做<strong>状态捕获</strong>：从连续参数空间里钉住一个点，固化下来再送回流程。Markdown 是无状态的，在原理上做不到。</div>
+
+  <div class="separator"></div>
+
+  <h2>碰撞 5：协作维度</h2>
+
+  <div class="dialogue dialogue-reader">
+    <div class="speaker">读者回应</div>
+    <p>只要工具面向对象是他人，且在思考和设计过程中需要跟他人沟通，那的确很吸引我。</p>
+  </div>
+
+  <div class="dialogue dialogue-agent">
+    <div class="speaker">Agent 分析</div>
+    <p>新维度：不只是"给别人看"（呈现），而是"跟别人一起调"（协作）。文字沟通需要双方有共同的抽象能力，操作界面则把<strong>抽象降维成直觉</strong>。</p>
+  </div>
+
+  <div class="separator"></div>
+
+  <h2>碰撞 6：Stay in the Loop</h2>
+
+  <div class="dialogue dialogue-agent">
+    <div class="speaker">Agent 提问</div>
+    <p>"留在回路里"的关键，真的是输出格式吗？还是人需要学会什么时候介入、什么时候放手？</p>
+  </div>
+
+  <div class="dialogue dialogue-reader">
+    <div class="speaker">读者回应</div>
+    <p>Agent 读 Markdown 多少行都不累。人因为视觉系统、思维方式、交互偏好，认为 HTML 更容易也更愿意去 review——因为更愿意 review，才有可能发现问题。Markdown 很长时往往是 Agent 写的，人不读，就导致控制力下降。这是一个自我强化的循环。</p>
+  </div>
+
+  <div class="insight">
+    <strong>因果倒置。</strong>作者说"我选择用 HTML 来留在回路里"（主动选择）。读者的重新解释：不是人选择留在回路里，而是格式决定了人能不能留在回路里（被动条件）。人的意愿不是自变量，阅读体验才是。
+  </div>
+
+</div>
+
+<!-- ==================== TAB: 全文复盘 ==================== -->
+<div id="tab-review" class="tab-content">
+  <p class="section-intro">阅读完成后的全景回顾：理解轨迹、读后判断、术语表、下一步。</p>
+
+  <h2>理解轨迹</h2>
+<pre>
+[引子]         读者<span style="color:#f87171">抵抗</span> → 不接受"替代"框架，提出"分层"
+     |
+[信息密度]     读者<span style="color:#34d399">通过</span> → 但加了条件："看需求，看 token 成本"
+     |
+[视觉/分享]    读者<span style="color:#34d399">通过</span> → 归入自己的"呈现阶段"框架
+     |
+[双向交互]     读者<span style="color:#fbbf24">停留</span> → 提出"动态-静态快照"概念，线被部分动摇
+     |
+[用例/FAQ]     读者<span style="color:#34d399">通过</span> → 快速扫读
+     |
+[Stay in Loop] 读者<span style="color:#a78bfa">深入</span> → 因果倒置：格式不是选择，是控制力的前提条件
+</pre>
+
+  <p>最深的裂缝出现在两处：</p>
+  <ul>
+    <li><strong>引子段</strong>：拒绝了作者的"替代"叙事，坚持"分层"</li>
+    <li><strong>收尾段</strong>：把作者的主动选择叙事翻转为被动条件</li>
+  </ul>
+
+  <h2>读后一句话</h2>
+  <div class="card" style="border-left: 3px solid var(--reader); font-size: 17px;">
+    <p>"你说的对，HTML 更符合人的认知习惯，人愿意读才有可能发现问题。<strong>格式不是工具选择，是控制力的前提。</strong>"</p>
+  </div>
+  <p style="color: var(--text-secondary); font-size: 14px;">评估：<strong>L2（有判断）</strong>— 读者没有复述作者，而是把结论重铸为自己的语言，并立刻转化为行动意愿。</p>
+
+  <h2>终局问题</h2>
+  <div class="insight">
+    如果人的控制力取决于格式匹配认知习惯，而 agent 的效率取决于格式轻量可追踪（Markdown），那"对人最好的格式"和"对人机系统最好的格式"可能不是同一个。这个分裂怎么解决？还是说它根本不需要被解决——两层各管各的就行？
+  </div>
+
+  <h2>术语表</h2>
+  <table>
+    <tr><th>英文</th><th>中文</th><th>本文含义</th><th>出现位置</th></tr>
+    <tr><td>in the loop</td><td>在回路里</td><td>人类保持对 agent 输出的审查和决策权</td><td>收尾段</td></tr>
+    <tr><td>human-editable</td><td>人类可编辑</td><td>Markdown 的核心价值主张，作者认为正在失效</td><td>引子段</td></tr>
+    <tr><td>two-way interaction</td><td>双向交互</td><td>HTML 文档作为人机协作的中间界面，参数可回传</td><td>交互段</td></tr>
+    <tr><td>information density</td><td>信息密度</td><td>单位文档面积能传达的信息量</td><td>信息密度段</td></tr>
+    <tr><td>understatement</td><td>轻描淡写</td><td>英文技术写作中语气越平判断越重的修辞传统</td><td>引子段点睛</td></tr>
+  </table>
+
+  <h2>下一步</h2>
+  <div class="card">
+    <h4>1. 立刻能做</h4>
+    <p>下次让 Claude Code 做完 plan/spec 后追加："把这个 plan 做成一个 HTML 文件，加 tab 切换让不同角色看不同切面。"</p>
+  </div>
+  <div class="card">
+    <h4>2. 试交互闭环</h4>
+    <p>挑一个调参数的场景，让 Claude Code 生成带滑块的 HTML，调完用"复制为 prompt"按钮喂回去。体验"快照-回传"。</p>
+  </div>
+  <div class="card">
+    <h4>3. 读作者示例集</h4>
+    <p>按需求挑两三个看，找到跟自己工作场景最近的类型。</p>
+    <a class="link-btn" href="https://thariqs.github.io/html-effectiveness/" target="_blank">查看示例集 →</a>
+  </div>
+
+</div>
+
+</div><!-- /container -->
+
+<script>
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tabId).classList.add('active');
+  event.currentTarget.classList.add('active');
+  window.scrollTo({ top: 200, behavior: 'smooth' });
+}
+</script>
+
+</body>
+</html>
